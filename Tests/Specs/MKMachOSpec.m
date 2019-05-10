@@ -86,7 +86,7 @@ SpecBegin(MKMachOImage)
                 });
                 
                 it(@"should have the correct CPU subtype", ^{
-                    expect(machoHeader.cpusubtype).to.equal([otoolArchitectureHeader[@"cpusubtype"] integerValue]);
+                    expect((machoHeader.cpusubtype & (cpu_subtype_t)~CPU_SUBTYPE_MASK)).to.equal([otoolArchitectureHeader[@"cpusubtype"] integerValue]);
                 });
                 
                 it(@"should have the correct number of load commands", ^{
@@ -141,12 +141,18 @@ SpecBegin(MKMachOImage)
                         
                         it([NSString stringWithFormat:@"%@.%@ should have the correct value", [machoLoadCommand.class name], key], ^{
                             NSString *machoLoadCommandValue = nil;
-                            for (MKNodeField *field in layout.fields) {
+                            for (MKNodeField *field in layout.allFields) {
                                 if ([field.name isEqualToString:key]) {
                                     machoLoadCommandValue = [field formattedDescriptionForNode:machoLoadCommand];
                                     break;
                                 }
                             }
+                            
+                            // HACK HACK - otool renders a 0.0 in the LC_VERSION_MIN_* load command as 'n/a'.
+                            // We don't want to match that behavior in MachOKit proper.  Just skip the unit
+                            // test in this case.
+                            if ([otoolArchitectureLoadCommand[key] isEqualToString:@"n/a"] && [machoLoadCommandValue isEqualToString:@"0.0"])
+                                return;
                             
                             expect(machoLoadCommandValue).to.equal(otoolArchitectureLoadCommand[key]);
                         });
@@ -202,47 +208,69 @@ SpecBegin(MKMachOImage)
                 NSArray<NSDictionary*> *dyldInfoRebaseFixups = otoolArchitecture.fixupAddresses;
                 MKRebaseInfo *machoRebaseInfo = macho.rebaseInfo.value;
                 
-                if (machoRebaseInfo == nil)
-                    return; // TODO - Check if the image should have rebase info.
-                
-                NSArray *machoRebaseCommands = machoRebaseInfo.commands;
-                NSArray *machoRebaseFixups = machoRebaseInfo.fixups;
-                
-                it(@"should exist", ^{
-                    expect(machoRebaseCommands).toNot.beNil();
-                    expect(machoRebaseFixups).toNot.beNil();
-                });
-                
-                it(@"should not have any warnings", ^{
-                    expect(machoRebaseInfo.warnings).to.equal(@[]);
-                });
-                
-                it(@"should have the correct number of rebase commands", ^{
-                    expect(machoRebaseCommands.count).to.equal(dyldInfoRebaseCommands.count);
-                });
-                
-                it(@"should be parsed correctly", ^{
-                    for (NSUInteger i=0; i<MIN(machoRebaseCommands.count, dyldInfoRebaseCommands.count); i++) {
-                        MKRebaseCommand *command = machoRebaseCommands[i];
-                        NSString *machoRebaseCommandDescription = [[NSString alloc] initWithFormat:@"0x%.4" MK_VM_PRIXOFFSET " %@", command.nodeOffset, command.description];
-                        
-                        expect(machoRebaseCommandDescription).to.equal(dyldInfoRebaseCommands[i]);
-                    }
-                });
-                
-                it(@"should result int the correct number of fixups", ^{
-                    expect(machoRebaseFixups.count).to.equal(dyldInfoRebaseFixups.count);
-                });
-                
-                it(@"should result in the correct fixups", ^{
-                    for (NSUInteger i=0; i<MIN(machoRebaseFixups.count, dyldInfoRebaseFixups.count); i++) {
-                        MKFixup *fixup = machoRebaseFixups[i];
-                        
-                        expect(fixup.segment.name).to.equal(dyldInfoRebaseFixups[i][@"segment"]);
-                        expect(fixup.section.value.name).to.equal(dyldInfoRebaseFixups[i][@"section"]);
-                        expect([NSString stringWithFormat:@"0x%.8" MK_VM_PRIXADDR "", fixup.address]).to.equal(dyldInfoRebaseFixups[i][@"address"]);
-                    }
-                });
+                if (dyldInfoRebaseCommands.count != 0)
+                {
+                    NSArray *machoRebaseCommands = machoRebaseInfo.commands;
+                    NSArray *machoRebaseFixups = machoRebaseInfo.fixups;
+                    
+                    it(@"should exist", ^{
+                        expect(machoRebaseCommands).toNot.beNil();
+                        expect(machoRebaseFixups).toNot.beNil();
+                    });
+                    
+                    it(@"should not have any warnings", ^{
+                        expect(machoRebaseInfo.warnings).to.equal(@[]);
+                    });
+                    
+                    it(@"should have the correct number of rebase commands", ^{
+                        expect(machoRebaseCommands.count).to.equal(dyldInfoRebaseCommands.count);
+                    });
+                    
+                    it(@"should be parsed correctly", ^{
+                        for (NSUInteger i=0; i<MIN(machoRebaseCommands.count, dyldInfoRebaseCommands.count); i++) {
+                            MKRebaseCommand *command = machoRebaseCommands[i];
+                            NSString *machoRebaseCommandDescription = [[NSString alloc] initWithFormat:@"0x%.4" MK_VM_PRIXOFFSET " %@", command.nodeOffset, command.description];
+                            
+                            expect(machoRebaseCommandDescription).to.equal(dyldInfoRebaseCommands[i]);
+                        }
+                    });
+                    
+                    it(@"should result in the correct number of fixups", ^{
+                        expect(machoRebaseFixups.count).to.equal(dyldInfoRebaseFixups.count);
+                    });
+                    
+                    it(@"should result in the correct fixups", ^{
+                        for (NSUInteger i=0; i<MIN(machoRebaseFixups.count, dyldInfoRebaseFixups.count); i++) {
+                            MKFixup *fixup = machoRebaseFixups[i];
+                            
+                            expect(fixup.segment.name).to.equal(dyldInfoRebaseFixups[i][@"segment"]);
+                            expect(fixup.section.value.name).to.equal(dyldInfoRebaseFixups[i][@"section"]);
+                            expect([NSString stringWithFormat:@"0x%.8" MK_VM_PRIXADDR "", fixup.address]).to.equal(dyldInfoRebaseFixups[i][@"address"]);
+                        }
+                    });
+                }
+                else if (dyldInfoRebaseCommands.count == 0 && dyldInfoRebaseFixups != 0)
+                {
+                    // Look for threaded rebase info
+                    MKBindingsInfo *machoBindInfo = macho.bindingsInfo.value;
+                    NSArray *machoThreadedRebaseFixups = [machoBindInfo.actions filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(id evaluatedObject, __unused NSDictionary *bindings) {
+                        return [evaluatedObject isKindOfClass:MKBindActionThreadedRebase.class];
+                    }]];
+                    
+                    it(@"should result in the correct number of fixups", ^{
+                        expect(machoThreadedRebaseFixups.count).to.equal(dyldInfoRebaseFixups.count);
+                    });
+                    
+                    it(@"should result in the correct fixups", ^{
+                        for (NSUInteger i=0; i<MIN(machoThreadedRebaseFixups.count, dyldInfoRebaseFixups.count); i++) {
+                            MKBindActionThreadedRebase *fixup = machoThreadedRebaseFixups[i];
+                            
+                            expect(fixup.segment.name).to.equal(dyldInfoRebaseFixups[i][@"segment"]);
+                            expect(fixup.section.value.name).to.equal(dyldInfoRebaseFixups[i][@"section"]);
+                            expect([NSString stringWithFormat:@"0x%.8" MK_VM_PRIXADDR "", fixup.address]).to.equal(dyldInfoRebaseFixups[i][@"address"]);
+                        }
+                    });
+                }
             });
             
             //----------------------------------------------------------------//
@@ -255,7 +283,9 @@ SpecBegin(MKMachOImage)
                     return; // TODO - Check if the image should have binding info.
                 
                 NSArray *machoBindCommands = machoBindInfo.commands;
-                NSArray *machoBindings = machoBindInfo.actions;
+                NSArray *machoBindings = [machoBindInfo.actions filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(id evaluatedObject, __unused NSDictionary *bindings) {
+                    return [evaluatedObject isKindOfClass:MKBindActionBind.class];
+                }]];
                 
                 it(@"should exist", ^{
                     expect(machoBindCommands).toNot.beNil();
@@ -285,7 +315,7 @@ SpecBegin(MKMachOImage)
                 
                 it(@"should result in the correct bindings", ^{
                     for (NSUInteger i=0; i<MIN(machoBindings.count, dyldInfoBindings.count); i++) {
-                        MKBindAction *binding = machoBindings[i];
+                        MKBindActionBind *binding = machoBindings[i];
                         
                         expect(binding.segment.name).to.equal(dyldInfoBindings[i][@"segment"]);
                         expect(binding.section.value.name).to.equal(dyldInfoBindings[i][@"section"]);
@@ -338,7 +368,7 @@ SpecBegin(MKMachOImage)
                 
                 it(@"should result in the correct bindings", ^{
                     for (NSUInteger i=0; i<MIN(machoWeakBindings.count, dyldInfoWeakBindings.count); i++) {
-                        MKBindAction *binding = machoWeakBindings[i];
+                        MKBindActionBind *binding = machoWeakBindings[i];
                         
                         expect(binding.segment.name).to.equal(dyldInfoWeakBindings[i][@"segment"]);
                         expect(binding.section.value.name).to.equal(dyldInfoWeakBindings[i][@"section"]);
@@ -390,7 +420,7 @@ SpecBegin(MKMachOImage)
                 
                 it(@"should result in the correct bindings", ^{
                     for (NSUInteger i=0; i<MIN(machoLazyBindings.count, dyldInfoLazyBindings.count); i++) {
-                        MKBindAction *binding = machoLazyBindings[i];
+                        MKBindActionBind *binding = machoLazyBindings[i];
                         
                         expect(binding.segment.name).to.equal(dyldInfoLazyBindings[i][@"segment"]);
                         expect(binding.section.value.name).to.equal(dyldInfoLazyBindings[i][@"section"]);
@@ -401,7 +431,7 @@ SpecBegin(MKMachOImage)
                     }
                 });
             });
-			
+            
             //----------------------------------------------------------------//
             describe(@"exports", ^{
                 NSArray<NSDictionary*> *dyldInfoExports = otoolArchitecture.exports;
@@ -452,10 +482,104 @@ SpecBegin(MKMachOImage)
                         MKFunction *function = machoFunctions[i];
                         
                         expect(function.description).to.equal(dyldFunctionStarts[i][@"address"]);
+                        expect(function.thumb).to.equal(dyldFunctionStarts[i][@"thumb"]);
                     }
                 });
             });
-			
+            
+            //----------------------------------------------------------------//
+            describe(@"data in code", ^{
+                NSArray<NSDictionary*> *dyldDataInCodeEntries = otoolArchitecture.dataInCodeEntries;
+                MKDataInCode *machoDataInCode = macho.dataInCode.value;
+                
+                if (machoDataInCode == nil)
+                    return; // TODO - Check if the image should have DICE.
+                
+                NSArray *machoDataInCodeEntries = machoDataInCode.entries;
+                
+                it(@"should exist", ^{
+                    expect(machoDataInCodeEntries).toNot.beNil();
+                });
+                
+                it(@"should have the correct number of entries", ^{
+                    expect(machoDataInCodeEntries.count).to.equal(dyldDataInCodeEntries.count);
+                });
+                
+                it(@"should result in the correct entries", ^{
+                    for (NSUInteger i=0; i<MIN(machoDataInCodeEntries.count, dyldDataInCodeEntries.count); i++) {
+                        MKDataInCodeEntry *entry = machoDataInCodeEntries[i];
+                        
+                        expect([NSString stringWithFormat:@"0x%.8" PRIx32 "", entry.offset]).to.equal(dyldDataInCodeEntries[i][@"offset"]);
+                        expect([NSString stringWithFormat:@"%" PRIi16 "", entry.length]).to.equal(dyldDataInCodeEntries[i][@"length"]);
+                        expect([NSString stringWithFormat:@"0x%.4" PRIx16 "", entry.kind]).to.equal(dyldDataInCodeEntries[i][@"kind"]);
+                    }
+                });
+            });
+
+            //----------------------------------------------------------------//
+            describe(@"Symbols", ^{
+                NSArray<NSDictionary*> *nmDarwinSymbols = otoolArchitecture.darwinSymbols;
+                NSArray<NSDictionary*> *nmBSDSymbols = otoolArchitecture.bsdSymbols;
+                NSAssert(nmDarwinSymbols.count == nmBSDSymbols.count, @"NM produced mismatched symbol count between darwin and BSD formats");
+                MKSymbolTable *machoSymbolTable = macho.symbolTable.value;
+                
+                if (machoSymbolTable == nil)
+                    return; // TODO - Check if the image should have a symbol table.
+                
+                NSArray *machoSymbols = machoSymbolTable.symbols;
+                
+                it(@"should exist", ^{
+                    expect(machoSymbols).toNot.beNil();
+                });
+                
+                it(@"should have the correct number of symbols", ^{
+                    expect(machoSymbols.count).to.equal(nmDarwinSymbols.count);
+                });
+                
+                it(@"should result in the correct symbols", ^{
+                    for (NSUInteger i=0; i<MIN(machoSymbols.count, nmDarwinSymbols.count); i++) {
+                        // llvm-nm does not parse STABs when the output format
+                        // is set to 'darwin' (see the comment in NMUtil.m).
+                        // The solution is to run llvm-nm in 'bsd' format and
+                        // 'darwin' format.  BSD format correctly parses and
+                        // outputs STABs.  We use the BSD format output for
+                        // STABs and the darwin format output for everything
+                        // else.
+                        NSDictionary *nmDarwinSymbol = nmDarwinSymbols[i];
+                        NSDictionary *nmBSDSymbol = nmBSDSymbols[i];
+                        MKSymbol *machoSymbol = machoSymbols[i];
+                        
+                        // If llvm-nm in BSD format recorded the type as '-',
+                        // then it is a STAB.
+                        if ([nmBSDSymbol[@"type"] isEqualToString:@"-"]) {
+                            expect([machoSymbol isKindOfClass:MKDebugSymbol.class]).to.beTruthy();
+                            if ([machoSymbol isKindOfClass:MKDebugSymbol.class] == NO)
+                                continue;
+                            
+                            MKDebugSymbol *machoDebugSymbol = (MKDebugSymbol*)machoSymbol;
+                            NSDictionary *nmSTABInfo = nmBSDSymbol[@"stabInfo"];
+                            
+                            expect(machoDebugSymbol.name.description).to.equal(nmBSDSymbol[@"name"]);
+                            expect([[MKNodeFieldSTABType.sharedInstance.formatter stringForObjectValue:[machoDebugSymbol valueForKey:@"stabType"]] substringFromIndex:2]).to.equal(nmSTABInfo[@"type"]);
+                        }
+                        // Otherwise, it's a regular symbol.
+                        else {
+                            expect([machoSymbol isKindOfClass:MKRegularSymbol.class]).to.beTruthy();
+                            if ([machoSymbol isKindOfClass:MKRegularSymbol.class] == NO)
+                                continue;
+                            
+                            MKRegularSymbol *machoRegularSymbol = (MKRegularSymbol*)machoSymbol;
+                            
+                            expect([machoRegularSymbol.name.description stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]).to.equal(nmDarwinSymbol[@"name"]);
+                            expect(machoRegularSymbol.section.description).to.equal(nmDarwinSymbol[@"section"]);
+                            expect([MKNodeFieldSymbolType.sharedInstance.formatter stringForObjectValue:[machoRegularSymbol valueForKey:@"symbolType"]]).to.equal(nmDarwinSymbol[@"type"]);
+                            expect(machoRegularSymbol.external).to.equal([nmDarwinSymbol[@"external"] boolValue]);
+                            expect(machoRegularSymbol.privateExternal).to.equal([nmDarwinSymbol[@"privateExternal"] boolValue]);
+                        }
+                    }
+                });
+            });
+            
             //----------------------------------------------------------------//
             describe(@"Indirect Symbols", ^{
                 NSArray<NSDictionary*> *otoolIndirectSymbols = otoolArchitecture.indirectSymbols;
@@ -486,6 +610,7 @@ SpecBegin(MKMachOImage)
                     }
                 });
             });
+            
             //----------------------------------------------------------------//
             describe(@"_objc", ^{
                 // Skip images that use legacy OBJC ABI.

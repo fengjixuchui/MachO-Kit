@@ -27,7 +27,7 @@
 
 #import "MKNodeFieldBindOpcodeType.h"
 #import "MKInternal.h"
-#import "MKBindCommand.h"
+#import "MKNodeDescription.h"
 
 //----------------------------------------------------------------------------//
 @implementation MKNodeFieldBindOpcodeType
@@ -57,7 +57,8 @@ MKMakeSingletonInitializer(MKNodeFieldBindOpcodeType)
         _$((uint8_t)BIND_OPCODE_DO_BIND): @"BIND_OPCODE_DO_BIND",
         _$((uint8_t)BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB): @"BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB",
         _$((uint8_t)BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED): @"BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED",
-        _$((uint8_t)BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB): @"BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB"
+        _$((uint8_t)BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB): @"BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB",
+        _$((uint8_t)BIND_OPCODE_THREADED): @"BIND_OPCODE_THREADED"
     } retain];
     
     MKEnumerationFormatter *formatter = [MKEnumerationFormatter new];

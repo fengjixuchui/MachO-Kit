@@ -41,8 +41,9 @@
 { return @"BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB"; }
 
 //|++++++++++++++++++++++++++++++++++++|//
-+ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode
++ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode immediate:(uint8_t)immediate
 {
+#pragma unused (immediate)
     if (self != MKBindDoBindAddAddressULEB.class)
         return 0;
     
@@ -75,11 +76,13 @@
 //|++++++++++++++++++++++++++++++++++++|//
 - (BOOL)bind:(void (^)(void))binder withContext:(struct MKBindContext*)bindContext error:(NSError**)error
 {
+    // TODO - Unclear if this command can appear when using threaded binds.
+    
     binder();
     
     mk_error_t err;
-    if ((err = mk_vm_offset_add(bindContext->offset, self.derivedOffset, &bindContext->offset))) {
-        MK_ERROR_OUT = MK_MAKE_VM_OFFSET_ADD_ARITHMETIC_ERROR(err, bindContext->offset, self.derivedOffset);
+    if ((err = mk_vm_offset_add(bindContext->derivedOffset, self.derivedOffset, &bindContext->derivedOffset))) {
+        MK_ERROR_OUT = MK_MAKE_VM_OFFSET_ADD_ARITHMETIC_ERROR(err, bindContext->derivedOffset, self.derivedOffset);
         return NO;
     }
     

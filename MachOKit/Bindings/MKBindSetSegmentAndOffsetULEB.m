@@ -28,6 +28,7 @@
 #import "MKBindSetSegmentAndOffsetULEB.h"
 #import "MKInternal.h"
 #import "MKLEB.h"
+#import "MKMachO+Segments.h"
 
 //----------------------------------------------------------------------------//
 @implementation MKBindSetSegmentAndOffsetULEB
@@ -41,8 +42,9 @@
 { return @"BIND_OPCODE_SET_SEGMENT_AND_OFFSET_ULEB"; }
 
 //|++++++++++++++++++++++++++++++++++++|//
-+ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode
++ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode immediate:(uint8_t)immediate
 {
+#pragma unused (immediate)
     if (self != MKBindSetSegmentAndOffsetULEB.class)
         return 0;
     
@@ -78,7 +80,15 @@
 #pragma unused(binder)
 #pragma unused(error)
     bindContext->segmentIndex = self.segmentIndex;
-    bindContext->offset = self.offset;
+    bindContext->segmentOffset = self.offset;
+    bindContext->derivedOffset = self.offset;
+    
+    // Lookup the segment
+    bindContext->segment = [self.macho.segments[@(bindContext->segmentIndex)] retain];
+    if (bindContext->segment == nil) {
+        MK_ERROR_OUT = [NSError mk_errorWithDomain:MKErrorDomain code:MK_ENOT_FOUND description:@"No segment at index [%u].", bindContext->segmentIndex];
+        return NO;
+    }
     
     return YES;
 }

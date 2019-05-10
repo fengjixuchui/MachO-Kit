@@ -40,8 +40,9 @@
 { return @"BIND_OPCODE_SET_DYLIB_SPECIAL_IMM"; }
 
 //|++++++++++++++++++++++++++++++++++++|//
-+ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode
++ (uint32_t)canInstantiateWithOpcode:(uint8_t)opcode immediate:(uint8_t)immediate
 {
+#pragma unused (immediate)
     if (self != MKBindSetDylibSpecialImmediate.class)
         return 0;
     
@@ -89,7 +90,7 @@
     if (immediate == 0)
         return 0;
     else
-        return BIND_OPCODE_MASK | immediate;
+        return (int8_t)(BIND_OPCODE_MASK | immediate);
 }
 
 //◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦◦//

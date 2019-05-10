@@ -149,6 +149,50 @@
 }
 
 //|++++++++++++++++++++++++++++++++++++|//
+- (NSArray*)dataInCodeEntries
+{
+    NSArray *dataInCodeEntriesList;
+    @autoreleasepool {
+        NSString *dataInCodeEntries = [NSTask outputForLaunchedTaskWithLaunchPath:@XCRUN_PATH arguments:makeArgs(@"otool", @[@"-G"])];
+        dataInCodeEntriesList = [OtoolUtil parseDataInCodeEntries:dataInCodeEntries];
+    }
+    return dataInCodeEntriesList;
+}
+
+//|++++++++++++++++++++++++++++++++++++|//
+- (NSArray*)bsdSymbols
+{
+    NSArray *symbolsList;
+    @autoreleasepool {
+        NSString *symbols = [NSTask outputForLaunchedTaskWithLaunchPath:@XCRUN_PATH arguments:makeArgs(@"nm", @[@"-ap", @"-no-dyldinfo", @"-f", @"bsd"])];
+        symbolsList = [NMUtil parseBSDSymbols:symbols];
+    }
+    return symbolsList;
+}
+
+//|++++++++++++++++++++++++++++++++++++|//
+- (NSArray*)darwinSymbols
+{
+    NSArray *symbolsList;
+    @autoreleasepool {
+        NSString *symbols = [NSTask outputForLaunchedTaskWithLaunchPath:@XCRUN_PATH arguments:makeArgs(@"nm", @[@"-ap", @"-no-dyldinfo", @"-f", @"darwin"])];
+        symbolsList = [NMUtil parseDarwinSymbols:symbols];
+    }
+    return symbolsList;
+}
+
+//|++++++++++++++++++++++++++++++++++++|//
+- (NSArray*)indirectSymbols
+{
+    NSArray *symbolsList;
+    @autoreleasepool {
+        NSString *symbols = [NSTask outputForLaunchedTaskWithLaunchPath:@XCRUN_PATH arguments:makeArgs(@"otool", @[@"-I"])];
+        symbolsList = [OtoolUtil parseIndirectSymbols:symbols];
+    }
+    return symbolsList;
+}
+
+//|++++++++++++++++++++++++++++++++++++|//
 - (NSDictionary*)objcInfo
 {
     NSDictionary *objcInfo;

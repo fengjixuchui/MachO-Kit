@@ -35,6 +35,15 @@
 + (NSDictionary<NSString*, id> *)parseFatHeader:(NSString*)input;
 
 //! Parses \a input into an array of dictionaries, each representing a single
+//! data in code entry.  Each dictionary contains the following keys:
+//!
+//!     offset: offset to the data range
+//!     length: length of the data range
+//!     kind: data kind
+//!
++ (NSArray*)parseDataInCodeEntries:(NSString*)input;
+
+//! Parses \a input into an array of dictionaries, each representing a single
 //! indirect symbol table entry.  Each dictionary contains the following keys:
 //!
 //!     segment: Name of the segment that references the entry

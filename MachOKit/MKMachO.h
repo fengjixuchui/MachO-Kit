@@ -40,6 +40,8 @@
 @class MKDependentLibrary;
 @class MKFunctionStarts;
 @class MKRebaseInfo;
+@class MKDataInCode;
+@class MKSplitSegmentInfo;
 @class MKBindingsInfo;
 @class MKWeakBindingsInfo;
 @class MKLazyBindingsInfo;
@@ -86,6 +88,10 @@ typedef NS_OPTIONS(NSUInteger, MKMachOImageFlags) {
     MKOptional<MKFunctionStarts*> *_functionStarts;
     // Rebase //
     MKOptional<MKRebaseInfo*> *_rebaseInfo;
+    // Data In Code //
+    MKOptional<MKDataInCode*> *_dataInCode;
+    // Split Segment //
+    MKOptional<MKSplitSegmentInfo*> *_splitSegment;
     // Bindings //
     MKOptional<MKBindingsInfo*> *_bindingsInfo;
     MKOptional<MKWeakBindingsInfo*> *_weakBindingsInfo;

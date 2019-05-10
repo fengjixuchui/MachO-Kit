@@ -33,6 +33,14 @@
 #import <MachOKit/MKNodeFieldTypeByte.h>
 #import <MachOKit/MKNodeFieldEnumerationType.h>
 
+// <https://opensource.apple.com/source/dyld/dyld-635.2/src/ImageLoaderMachO.h.auto.html>
+#ifndef BIND_TYPE_THREADED_BIND
+    #define BIND_TYPE_THREADED_BIND 100
+#endif
+#ifndef BIND_TYPE_THREADED_REBASE
+    #define BIND_TYPE_THREADED_REBASE 102
+#endif
+
 NS_ASSUME_NONNULL_BEGIN
 
 //----------------------------------------------------------------------------//
@@ -45,6 +53,8 @@ typedef uint8_t MKBindType NS_TYPED_EXTENSIBLE_ENUM;
 static const MKBindType MKBindTypePointer           = BIND_TYPE_POINTER;
 static const MKBindType MKBindTypeTextAbsolute32    = BIND_TYPE_TEXT_ABSOLUTE32;
 static const MKBindType MKBindTypeTextPcrel32       = BIND_TYPE_TEXT_PCREL32;
+static const MKBindType MKBindTypeThreadedBind      = BIND_TYPE_THREADED_BIND;
+static const MKBindType MKBindTypeThreadedRebase    = BIND_TYPE_THREADED_REBASE;
 
 
 

@@ -48,6 +48,10 @@
 @property (nonatomic, readonly) NSArray *lazyBindings;
 @property (nonatomic, readonly) NSArray *exports;
 @property (nonatomic, readonly) NSArray *functionStarts;
+@property (nonatomic, readonly) NSArray *dataInCodeEntries;
+@property (nonatomic, readonly) NSArray *bsdSymbols;
+@property (nonatomic, readonly) NSArray *darwinSymbols;
+@property (nonatomic, readonly) NSArray *indirectSymbols;
 @property (nonatomic, readonly) NSDictionary *objcInfo;
 
 @end

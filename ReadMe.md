@@ -16,7 +16,7 @@ Mach-O Kit is designed to be easy to use while still exposing all the details of
 
 Mach-O Kit supports 32/64 bit OS X 10.10+, iOS 8.0+, and tvOS 9.0+.
 
-*NOTE*: Mach-O Kit can typically build with older versions of Xcode.  However, the unit tests require the latest Xcode or command line tools to pass.
+*NOTE*: Mach-O Kit can build with older versions of Xcode.  However, the unit tests require the latest Xcode or command line tools to pass.
 
 ### Obtaining Mach-O Kit
 
@@ -146,7 +146,6 @@ Mach-O Kit currently supports executables, dynamic shared libraries (dylibs and 
         * LC_PREPAGE
         * LC_PREBOUND_DYLIB
         * LC_SUB_UMBRELLA
-        * LC_LAZY_LOAD_DYLIB
         * LC_LINKER_OPTION
         * LC_LINKER_OPTIMIZATION_HINT
     * Segments and Sections ✔
@@ -162,10 +161,12 @@ Mach-O Kit currently supports executables, dynamic shared libraries (dylibs and 
         * Standard ✔
         * Weak ✔
         * Lazy ✔
+        * Threaded ✔ (*needs further testing*)
     * Exports Information ✔
     * Function Starts ✔
     * Segment Split Info
-    * Data in Code Entries
+        * V1 ✔
+    * Data in Code Entries ✔
     * Symbols ✔
         * STABS: *All stabs can be parsed by Mach-O Kit (because all stabs are symbols).  Specialized subclasses with refined API are only provided for the subset of stab types that are emitted by Apple's modern development tools.*
         * Undefined Symbols ✔

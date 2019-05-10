@@ -59,6 +59,7 @@ MKMakeSingletonInitializer(MKNodeFieldCPUType)
         _$(CPU_TYPE_HPPA): @"CPU_TYPE_HPPA",
         _$(CPU_TYPE_ARM): @"CPU_TYPE_ARM",
         _$(CPU_TYPE_ARM64): @"CPU_TYPE_ARM64",
+        _$(CPU_TYPE_ARM64_32): @"CPU_TYPE_ARM64_32",
         _$(CPU_TYPE_MC88000): @"CPU_TYPE_MC88000",
         _$(CPU_TYPE_SPARC): @"CPU_TYPE_SPARC",
         _$(CPU_TYPE_I860): @"CPU_TYPE_I860",

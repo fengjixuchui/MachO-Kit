@@ -26,5 +26,6 @@
 //----------------------------------------------------------------------------//
 
 #import <MachOKit/MKNodeFieldBindOpcodeType.h>
+#import <MachOKit/MKNodeFieldBindThreadedSubOpcodeType.h>
 #import <MachOKit/MKNodeFieldBindType.h>
 #import <MachOKit/MKNodeFieldBindSymbolFlagsType.h>

@@ -49,15 +49,16 @@ static const MKCPUType MKCPUTypeMC680x0           = CPU_TYPE_MC680x0;
 static const MKCPUType MKCPUTypeI386              = CPU_TYPE_I386;
 static const MKCPUType MKCPUTypeX86               = CPU_TYPE_X86;
 static const MKCPUType MKCPUTypeX8664             = CPU_TYPE_X86_64;
-/* skip 8, 9 */
+/* skip 8,9 */
 static const MKCPUType MKCPUTypeMC98000           = CPU_TYPE_MC98000;
 static const MKCPUType MKCPUTypeHPPA              = CPU_TYPE_HPPA;
 static const MKCPUType MKCPUTypeARM               = CPU_TYPE_ARM;
 static const MKCPUType MKCPUTypeARM64             = CPU_TYPE_ARM64;
+static const MKCPUType MKCPUTypeARM6432           = CPU_TYPE_ARM64_32;
 static const MKCPUType MKCPUTypeMC88000           = CPU_TYPE_MC88000;
 static const MKCPUType MKCPUTypeSPARC             = CPU_TYPE_SPARC;
 static const MKCPUType MKCPUTypeI860              = CPU_TYPE_I860;
-/* skip 16, 17 */
+/* skip 16,17 */
 static const MKCPUType MKCPUTypePowerPC           = CPU_TYPE_POWERPC;
 static const MKCPUType MKCPUTypePowerPC64         = CPU_TYPE_POWERPC64;
 

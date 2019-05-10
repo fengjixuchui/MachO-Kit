@@ -113,6 +113,7 @@
     #import <MachOKit/MKLCCodeSignature.h>
     #import <MachOKit/MKLCSegmentSplitInfo.h>
     #import <MachOKit/MKLCReExportDylib.h>
+    #import <MachOKit/MKLCLazyLoadDylib.h>
     #import <MachOKit/MKLCEncryptionInfo.h>
     #import <MachOKit/MKLCDyldInfo.h>
     #import <MachOKit/MKLCDyldInfoOnly.h>
@@ -161,11 +162,26 @@
     #import <MachOKit/MKRebaseDoRebaseULEBTimes.h>
     #import <MachOKit/MKRebaseDoRebaseAddAddressULEB.h>
     #import <MachOKit/MKRebaseDoRebaseULEBTimesSkippingULEB.h>
+#import <MachOKit/MKMachOImage+DataInCode.h>
+    #import <MachOKit/MKDataInCode.h>
+    #import <MachOKit/MKDataInCodeEntry.h>
+#import <MachOKit/MKMachO+SplitSegment.h>
+    #import <MachOKit/MKSplitSegmentInfo.h>
+    #import <MachOKit/MKSplitSegmentInfoV1.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Context.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Fixup.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Entry.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Opcode.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Offset.h>
+        #import <MachOKit/MKSplitSegmentInfoV1Terminator.h>
 #import <MachOKit/MKMachO+Bindings.h>
     #import <MachOKit/MKBindingsInfo.h>
     #import <MachOKit/MKWeakBindingsInfo.h>
     #import <MachOKit/MKLazyBindingsInfo.h>
     #import <MachOKit/MKBindAction.h>
+    #import <MachOKit/MKBindActionBind.h>
+    #import <MachOKit/MKBindActionThreadedBind.h>
+    #import <MachOKit/MKBindActionThreadedRebase.h>
     #import <MachOKit/MKBindCommand.h>
     #import <MachOKit/MKBindCommandOffsetAdjusting.h>
     #import <MachOKit/MKBindDone.h>
@@ -181,6 +197,9 @@
     #import <MachOKit/MKBindDoBindAddAddressULEB.h>
     #import <MachOKit/MKBindDoBindAddAddressImmediateScaled.h>
     #import <MachOKit/MKBindDoBindULEBTimesSkippingULEB.h>
+    #import <MachOKit/MKBindThreaded.h>
+    #import <MachOKit/MKBindThreadedSetBindOrdinalTableSizeULEB.h>
+    #import <MachOKit/MKBindThreadedApply.h>
 #import <MachOKit/MKMachO+Exports.h>
 	#import <MachOKit/MKExportsInfo.h>
     #import <MachOKit/MKExport.h>

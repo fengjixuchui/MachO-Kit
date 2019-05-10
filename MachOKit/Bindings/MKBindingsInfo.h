@@ -49,6 +49,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSArray<__kindof MKBindCommand*> *commands;
 
 //! An array of bind actions derived from the bind commands.
+//!
+//! @note
+//! For binaries that use threaded binds (i.e, arm64e), this array will
+//! also contain rebase actions (represented by instances of
+//! \ref MKBindActionThreadedRebase).  Filter the array for subclasses of
+//! \ref MKBindActionBind if you are only interested in the bindings.
 @property (nonatomic, readonly) NSArray<__kindof MKBindAction*> *actions;
 
 @end
